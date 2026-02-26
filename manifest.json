@@ -1,7 +1,7 @@
 {
     "name": "Landsail Pro Dashboard",
     "short_name": "Landsail",
-    "start_url": "index.html",
+    "start_url": "/LandSailSpotting/index.html",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#212529",
