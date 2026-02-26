@@ -20,7 +20,7 @@ async function initDashboard() {
             
             const data = await fetchSpotData(spot);
             renderSpot(spot, data);
-            checkAndNotify(spot, data);
+            await checkAndNotify(spot, data);
         }
     } catch (err) {
         console.error("Init Error:", err);
@@ -63,22 +63,30 @@ function setupAlertButtons() {
     }
 }
 
-function sendTestNotification() {
-    console.log("Attempting to send notification. Current permission:", Notification.permission);
-    
-    if (Notification.permission === "granted") {
-        const options = {
-            body: "Wind is up! Golden Window detected.",
-            icon: "https://www.tide-forecast.com/favicon.ico",
-            vibrate: [200, 100, 200], // Vibration for mobile
-            badge: "https://www.tide-forecast.com/favicon.ico"
-        };
-        new Notification("🌬️ LandSail Alert", options);
-    } else {
-        alert("Permission not granted. Please click the 🔒 icon in the address bar and set Notifications to 'Allow'.");
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") sendTestNotification();
+async function sendTestNotification() {
+    console.log("Test button clicked. Permission is:", Notification.permission);
+
+    if (Notification.permission !== "granted") {
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+            alert("Permission denied. Click the Lock (🔒) icon in the URL bar to reset.");
+            return;
+        }
+    }
+
+    // Use the Service Worker to show the notification (The "App" way)
+    if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        registration.showNotification("🌬️ LandSail Alert", {
+            body: "The notification system is working!",
+            icon: "./favicon.ico", // Ensure this exists in your repo
+            badge: "./favicon.ico",
+            vibrate: [200, 100, 200],
+            tag: "test-alert"
         });
+    } else {
+        // Fallback for standard web
+        new Notification("🌬️ LandSail Alert", { body: "Working!" });
     }
 }
 
@@ -205,14 +213,27 @@ function updateAlertUI() {
     active.style.display = isGranted ? "block" : "none";
 }
 
-function checkAndNotify(spot, windows) {
+async function checkAndNotify(spot, windows) {
     if (spot.alertEnabled && Notification.permission === "granted") {
         const g = windows.find(w => w.isGood);
         if (g) {
-            new Notification(`🚀 Golden Window: ${spot.name}`, {
-                body: `${g.time.getHours()}h | Wind: ${g.winds[1].toFixed(1)} km/h`,
-                icon: "https://www.tide-forecast.com/favicon.ico"
-            });
+            // Try Service Worker first (Better for PWA)
+            if ('serviceWorker' in navigator) {
+                const reg = await navigator.serviceWorker.ready;
+                reg.showNotification(`🚀 Golden Window: ${spot.name}`, {
+                    body: `${g.time.getHours()}h | Wind: ${g.winds[1].toFixed(1)} km/h`,
+                    icon: "./favicon.ico",
+                    badge: "./favicon.ico",
+                    tag: `alert-${spot.name}`, // Prevents duplicate alerts for the same spot
+                    vibrate: [200, 100, 200]
+                });
+            } else {
+                // Classic fallback
+                new Notification(`🚀 Golden Window: ${spot.name}`, {
+                    body: `${g.time.getHours()}h | Wind: ${g.winds[1].toFixed(1)} km/h`,
+                    icon: "https://www.tide-forecast.com/favicon.ico"
+                });
+            }
         }
     }
 }
