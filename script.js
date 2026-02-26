@@ -79,8 +79,8 @@ async function sendTestNotification() {
         const registration = await navigator.serviceWorker.ready;
         registration.showNotification("🌬️ LandSail Alert", {
             body: "The notification system is working!",
-            icon: "./favicon.ico", // Ensure this exists in your repo
-            badge: "./favicon.ico",
+            icon: "https://www.tide-forecast.com/favicon.ico",
+            badge: "https://www.tide-forecast.com/favicon.ico",
             vibrate: [200, 100, 200],
             tag: "test-alert"
         });
@@ -260,8 +260,8 @@ async function checkAndNotify(spot, windows) {
                 const reg = await navigator.serviceWorker.ready;
                 reg.showNotification(`🚀 Golden Window: ${spot.name}`, {
                     body: `${g.time.getHours()}h | Wind: ${g.winds[1].toFixed(1)} km/h`,
-                    icon: "./favicon.ico",
-                    badge: "./favicon.ico",
+                    icon: "https://www.tide-forecast.com/favicon.ico",
+                    badge: "https://www.tide-forecast.com/favicon.ico",
                     tag: `alert-${spot.name}`, // Prevents duplicate alerts for the same spot
                     vibrate: [200, 100, 200]
                 });
