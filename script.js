@@ -127,25 +127,35 @@ function renderSpot(spot, windows) {
     const listContainer = document.getElementById('spot-list');
     const spotKey = spot.name.replace(/\s+/g, '');
     const golden = windows.find(w => w.isGood) || windows[0];
+    // Calculate the percentage relative to 120
+    const coeffPct = Math.round((golden.coeff / 120) * 100);
 
+    // --- 1. SIDEBAR CARD RENDERING ---
     const card = document.createElement('div');
     card.className = `list-group-item mb-2 shadow-sm border-start border-4 ${golden.isGood ? 'border-success' : 'border-light'} ${spot.alertEnabled ? 'bg-white border-primary' : ''}`;
+    card.style.cursor = "default";
+    
     card.innerHTML = `
-        <div class="d-flex justify-content-between align-items-start mb-1">
-            <h6 class="fw-bold mb-0 small text-uppercase">${spot.name}</h6>
-            <div class="d-flex gap-2">
-                <span class="alert-toggle" style="cursor:pointer" id="bell-${spotKey}">${spot.alertEnabled ? '🔔' : '🔕'}</span>
-                <span class="badge ${golden.isGood ? 'bg-success' : 'bg-secondary'}">${golden.isGood ? 'GOLDEN' : 'STANDBY'}</span>
-            </div>
+    <div class="d-flex justify-content-between align-items-start mb-1">
+        <h6 class="fw-bold mb-0 small text-uppercase">${spot.name}</h6>
+        <div class="d-flex gap-2">
+            <span class="alert-toggle" style="cursor:pointer" id="bell-${spotKey}">${spot.alertEnabled ? '🔔' : '🔕'}</span>
+            <span class="badge ${golden.isGood ? 'bg-success' : 'bg-secondary'}">${golden.isGood ? 'GOLDEN' : 'STANDBY'}</span>
         </div>
-        <div class="row align-items-center" style="cursor:pointer" id="fly-${spotKey}">
-            <div class="col-6"><div class="h4 mb-0 fw-bold">${golden.winds[1].toFixed(1)} <small class="h6 text-muted">km/h</small></div></div>
-            <div class="col-6 text-end small"><b>${golden.time.getHours()}:00</b>h | Coeff: ${golden.coeff}</div>
+    </div>
+    <div class="row align-items-center" style="cursor:pointer" id="fly-${spotKey}">
+        <div class="col-6">
+            <div class="h4 mb-0 fw-bold">${golden.winds[1].toFixed(1)} <small class="h6 text-muted">km/h</small></div>
         </div>
-    `;
+        <div class="col-6 text-end small">
+            <b>${golden.time.getHours()}:00</b>h | Coeff: ${golden.coeff} <b>(${coeffPct}%)</b>
+        </div>
+    </div>
+`;
+    
     listContainer.appendChild(card);
 
-    // Event Listeners attached after append to ensure IDs exist
+    // --- 2. SIDEBAR EVENT LISTENERS ---
     document.getElementById(`bell-${spotKey}`).addEventListener('click', (e) => {
         spot.alertEnabled = !spot.alertEnabled;
         localStorage.setItem(`alert-${spotKey}`, spot.alertEnabled);
@@ -153,26 +163,43 @@ function renderSpot(spot, windows) {
         card.classList.toggle('border-primary', spot.alertEnabled);
     });
 
-    document.getElementById(`fly-${spotKey}`).addEventListener('click', () => map.flyTo([spot.lat, spot.lon], 12));
+    document.getElementById(`fly-${spotKey}`).addEventListener('click', () => {
+        map.flyTo([spot.lat, spot.lon], 12);
+    });
 
+    // --- 3. MAP TIMELINE (TODAY, TOMORROW, DAY 2) ---
     const drawTimeline = () => {
         const multiplier = 0.5 / Math.pow(2, map.getZoom() - 7);
         const today = new Date();
-        [0,1,2].forEach(idx => {
-            const target = new Date(); target.setDate(today.getDate() + idx);
-            const d = windows.find(w => w.time.toDateString() === target.toDateString());
+
+        [0, 1, 2].forEach(idx => {
+            const target = new Date(); 
+            target.setDate(today.getDate() + idx);
+            const activeDateString = target.toDateString();
+            const d = windows.find(w => w.time.toDateString() === activeDateString);
+
             if (d) {
                 const color = d.winds[1] >= 20 ? "#198754" : (d.winds[1] >= 15 ? "#ffc107" : "#dc3545");
                 const m = L.circleMarker([spot.lat, spot.lon + (idx * multiplier)], {
-                    radius: idx === 0 ? 12 : 8, fillColor: color, color: "#fff", weight: 2, fillOpacity: 0.9, className: `timeline-${spotKey}`
+                    radius: idx === 0 ? 12 : 8, 
+                    fillColor: color, 
+                    color: "#fff", 
+                    weight: 2, 
+                    fillOpacity: 0.9, 
+                    className: `timeline-${spotKey}`
                 }).addTo(map);
 
+                // --- 4. POPUP TABLE WITH SUN/MOON & HIGHLIGHT ---
                 let rows = windows.slice(0, 7).map(w => {
-                    const active = w.time.toDateString() === target.toDateString();
+                    const isSelectedDay = w.time.toDateString() === activeDateString;
+                    const isNight = w.time.getHours() < 7 || w.time.getHours() >= 20;
                     const rClass = w.winds[1] >= 20 ? "table-success" : (w.winds[1] >= 15 ? "table-warning" : "table-danger");
-                    const style = active ? 'outline: 3px solid black; outline-offset: -3px; font-weight: bold;' : '';
-                    return `<tr class="${rClass}" style="${style}">
-                        <td class="small px-1">${w.time.getHours()}h</td>
+                    
+                    // The "Bold Black Box" for the clicked day
+                    const highlightStyle = isSelectedDay ? 'outline: 1px solid black; outline-offset: -3px; font-weight: bold; font-size:1.3em' : '';
+
+                    return `<tr class="${rClass}" style="${highlightStyle}">
+                        <td class="small px-1 text-nowrap">${isNight ? '🌙' : '☀️'} ${w.time.toLocaleDateString([], {weekday:'short', hour:'2-digit'})}h</td>
                         <td class="small text-center">${w.winds[0].toFixed(0)}</td>
                         <td class="small text-center fw-bold bg-white bg-opacity-25">${w.winds[1].toFixed(0)}</td>
                         <td class="small text-center">${w.winds[2].toFixed(0)}</td>
@@ -180,18 +207,29 @@ function renderSpot(spot, windows) {
                     </tr>`;
                 }).join('');
 
-                m.bindPopup(`<div style="min-width:300px"><h6 class="fw-bold border-bottom pb-1">${spot.name}</h6>
-                    <table class="table table-sm table-bordered mb-2" style="font-size:0.65rem">
-                        <thead class="table-light"><tr><th>Hr</th><th>T-2</th><th>Low</th><th>T+2</th><th>Coeff</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                    <a href="https://www.tide-forecast.com/locations/${spot.tideforescast}/tides/latest" target="_blank" class="btn btn-sm btn-outline-primary w-100 py-1" style="font-size:0.7rem; font-weight:700;">
-                        <img src="https://www.tide-forecast.com/favicon.ico" width="14"> OPEN TIDE FORECAST
-                    </a></div>`, { minWidth: 320 });
+                m.bindPopup(`
+                    <div style="min-width:300px">
+                        <h6 class="fw-bold border-bottom pb-1">${spot.name} <small class="text-muted">(${idx === 0 ? 'Today' : (idx === 1 ? 'Tomorrow' : 'Day 2')})</small></h6>
+                        <table class="table table-sm table-bordered mb-2" style="font-size:0.65rem">
+                            <thead class="table-light">
+                                <tr><th>Day/Hr</th><th>T-2</th><th>Low</th><th>T+2</th><th>Coeff</th></tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                        <a href="https://www.tide-forecast.com/locations/${spot.tideforescast}/tides/latest" 
+                           target="_blank" 
+                           class="btn btn-sm btn-outline-primary w-100 py-1" 
+                           style="font-size:0.7rem; font-weight:700;">
+                           <img src="./favicon.ico" width="14" onerror="this.src='https://www.tide-forecast.com/favicon.ico'"> OPEN TIDE FORECAST
+                        </a>
+                    </div>`, { minWidth: 320 });
             }
         });
     };
+
     drawTimeline();
+    
+    // Refresh markers on zoom
     map.on('zoomend', () => {
         map.eachLayer(l => l.options?.className === `timeline-${spotKey}` && map.removeLayer(l));
         drawTimeline();
