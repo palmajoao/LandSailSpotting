@@ -64,13 +64,21 @@ function setupAlertButtons() {
 }
 
 function sendTestNotification() {
+    console.log("Attempting to send notification. Current permission:", Notification.permission);
+    
     if (Notification.permission === "granted") {
-        new Notification("🌬️ Alert System Active", {
-            body: "Ready to spot Golden Windows! Toggle the bell on your spots.",
-            icon: "https://www.tide-forecast.com/favicon.ico"
-        });
+        const options = {
+            body: "Wind is up! Golden Window detected.",
+            icon: "https://www.tide-forecast.com/favicon.ico",
+            vibrate: [200, 100, 200], // Vibration for mobile
+            badge: "https://www.tide-forecast.com/favicon.ico"
+        };
+        new Notification("🌬️ LandSail Alert", options);
     } else {
-        alert("Please enable notifications first.");
+        alert("Permission not granted. Please click the 🔒 icon in the address bar and set Notifications to 'Allow'.");
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") sendTestNotification();
+        });
     }
 }
 
