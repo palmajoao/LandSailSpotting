@@ -1,0 +1,16 @@
+[
+    { 
+        "name": "Vila Real de S. António", 
+        "lat": 37.1594, 
+        "lon": -7.4071, 
+        "tideforescast": "Vila-Real-de-Santo-Antonio-Portugal", 
+        "ntfyTopic": "landsail_vrsa_2026" 
+    },
+    { 
+        "name": "Peniche / Baleal", 
+        "lat": 39.3741, 
+        "lon": -9.3355, 
+        "tideforescast": "Peniche-Portugal", 
+        "ntfyTopic": "landsail_peniche_2026" 
+    }
+]
