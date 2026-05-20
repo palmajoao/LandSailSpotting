@@ -2,8 +2,8 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const WIND_THRESHOLD = 10; 
-const COEFF_THRESHOLD = 80;
+const WIND_THRESHOLD = 0;//10; 
+const COEFF_THRESHOLD = 10;//80;
 
 async function checkAllSpots() {
     try {
