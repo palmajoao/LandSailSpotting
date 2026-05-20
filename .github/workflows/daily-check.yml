@@ -1,0 +1,25 @@
+name: Landsail Automation Engine
+
+on:
+  schedule:
+    # Runs exactly every 3 hours (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
+    - cron: '0 */3 * * *'
+  workflow_dispatch: # Keeps the manual play button active in GitHub
+
+jobs:
+  run-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Runtime Library Dependencies
+        run: npm install axios
+
+      - name: Execute Live Condition Scans
+        run: node cron-check.js
