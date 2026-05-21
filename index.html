@@ -16,49 +16,95 @@
         .leaflet-popup-content { margin: 12px; line-height: 1.2; }
         .alert-toggle { font-size: 1.4rem; text-decoration: none; transition: opacity 0.2s; }
         .alert-toggle:hover { opacity: 0.7; }
+        
+        /* Nav tabs active layout overrides */
+        .nav-tabs .nav-link { color: rgba(255,255,255,0.75); border: none; }
+        .nav-tabs .nav-link:hover { color: #fff; }
+        .nav-tabs .nav-link.active { background-color: #f8f9fa !important; color: #212529 !important; font-weight: bold; }
+
+        /* Custom Purple Class for Expert Beach Winds */
+        .table-purple { background-color: #ebd1ff !important; color: #4a0080 !important; }
+        .table-danger { background-color: #f8d7da !important; color: #842029 !important; }
+        .table-warning { background-color: #fff3cd !important; color: #664d03 !important; }
+        .table-success { background-color: #d1e7dd !important; color: #0f5132 !important; }
+
+        /* Styles for the dynamically rendered about.md layout */
+        .markdown-body h2, .markdown-body h3, .markdown-body h5 { margin-top: 1.5rem; font-weight: 700; color: #212529; }
+        .markdown-body h5 { color: #0d6efd; }
+        .markdown-body table { width: 100%; margin-top: 1rem; margin-bottom: 1rem; border-collapse: collapse; font-size: 0.8rem; }
+        .markdown-body th, .markdown-body td { padding: 0.6rem; border: 1px solid #dee2e6; vertical-align: middle; }
+        .markdown-body th { background-color: #212529; color: white; }
+        .markdown-body pre { background-color: #212529; color: #f8f9fa; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; }
     </style>
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-dark bg-dark shadow-sm mb-3">
-    <div class="container-fluid">
-        <span class="navbar-brand mb-0 h1">🌬️ LANDSAIL DASHBOARD</span>
+<nav class="navbar navbar-dark bg-dark shadow-sm navbar-expand">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <span class="navbar-brand mb-0 h1 me-4">🌬️ LANDSAIL DASHBOARD</span>
+        <div class="nav nav-tabs border-0" id="nav-tab" role="tablist">
+            <button class="nav-link active me-2" id="tab-dashboard" data-bs-toggle="tab" data-bs-target="#panel-dashboard" type="button" role="tab">🗺️ Live Dashboard</button>
+            <button class="nav-link" id="tab-about" data-bs-toggle="tab" data-bs-target="#panel-about" type="button" role="tab">ℹ️ About & Thresholds</button>
+        </div>
     </div>
 </nav>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-lg-4 mb-4">
-            <div id="spot-list" class="list-group shadow-sm">
-                <div class="text-center py-5 bg-white border rounded" id="loader">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2 text-muted">Scanning Atlantic Windows...</p>
+<div class="tab-content" id="nav-tabContent">
+    
+    <div class="tab-pane fade show active" id="panel-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
+        <div class="container-fluid mt-3">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div id="spot-list" class="list-group shadow-sm">
+                        <div class="text-center py-5 bg-white border rounded" id="loader">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2 text-muted">Scanning Atlantic Windows...</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0 mb-3">
-                <div id="map"></div>
-            </div>
+                
+                <div class="col-lg-8">
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div id="map"></div>
+                    </div>
 
-            <div id="alert-manager" class="card shadow-sm border-0">
-                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold">🔔 Mobile Notification Center</h6>
-                    <div class="badge bg-success">Automated Background Engine</div>
-                </div>
-                <div class="card-body">
-                    <p class="small text-muted mb-3">Background servers check wind profiles and low tide coefficients 4 times a day. To receive instant push notifications 2–4 days in advance:</p>
-                    <ol class="small text-secondary ps-3 mb-0">
-                        <li>Download the free <b>ntfy</b> app on your mobile phone (<a href="https://apps.apple.com/us/app/ntfy/id1625396347" target="_blank">iOS</a> / <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank">Android</a>).</li>
-                        <li>Click the <b>🔔 icon</b> next to your favorite beaches in the list below to subscribe to their broadcast channels inside the app.</li>
-                    </ol>
+                    <div id="alert-manager" class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">🔔 Mobile Notification Center</h6>
+                            <div class="badge bg-success">Automated Background Engine</div>
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted mb-3">Background servers check wind profiles and low tide coefficients 8 times a day (every 3 hours). To receive instant push notifications 2–4 days in advance:</p>
+                            <ol class="small text-secondary ps-3 mb-0">
+                                <li>Download the free <b>ntfy</b> app on your mobile phone (<a href="https://apps.apple.com/us/app/ntfy/id1625396347" target="_blank">iOS</a> / <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank">Android</a>).</li>
+                                <li>Click the <b>🔔 icon</b> next to your favorite beaches in the list layout to subscribe to their broadcast channels inside the app.</li>
+                            </ol>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="tab-pane fade" id="panel-about" role="tabpanel" aria-labelledby="tab-about">
+        <div class="container-fluid mt-3">
+            <div class="row justify-content-center">
+                <div class="col-xl-9 col-lg-11">
+                    <div class="card shadow-sm border-0 p-4 mb-4 markdown-body" id="markdown-target">
+                        <div class="text-center py-4 text-muted">
+                            <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+                            <span class="ms-2">Loading Documentation Manual...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js"></script>
 </body>
