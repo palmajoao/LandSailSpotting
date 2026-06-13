@@ -2,8 +2,8 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
-const WIND_THRESHOLD = 18;//10; 
-const COEFF_THRESHOLD = 80;//80;
+const WIND_THRESHOLD = 18; 
+const COEFF_THRESHOLD = 80;
 
 async function checkAllSpots() {
     try {
@@ -26,6 +26,9 @@ async function checkAllSpots() {
             const historyHeights = tHourly.sea_level_height_msl.slice(0, historyIdx);
             const refAmp = Math.max(...historyHeights) - Math.min(...historyHeights);
 
+            // Container to collect all ideal windows for this specific spot
+            let matchingWindows = [];
+
             // Filter strictly for 2 to 4 days ahead (48 hours to 96 hours out)
             for (let i = historyIdx + 48; i < historyIdx + 96; i++) {
                 if (i >= tHourly.sea_level_height_msl.length - 3) break;
@@ -43,11 +46,23 @@ async function checkAllSpots() {
                             weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
                         });
 
-                        const message = `🚨 Perfect Landsail Window Spotted!\n📅 Time: ${displayTime}h\n💨 Wind: ${windAtT.toFixed(1)} km/h\n🌊 Tide Coeff: ${coeff}`;
-                        await sendNotification(spot.ntfyTopic, spot.name, message);
+                        // Store a neat single-line summary string for this session window
+                        matchingWindows.push(`📅 ${displayTime}h\n💨 Wind: ${windAtT.toFixed(1)} km/h | 🌊 Coeff: ${coeff}`);
                     }
                 }
             }
+
+            // After scanning all windows for this beach, fire exactly ONE notification summary
+            if (matchingWindows.length > 0) {
+                // Join separate sessions cleanly with clear space breaks
+                const consolidatedMessage = `The following upcoming riding sessions have matched your beach constraints:\n\n` + matchingWindows.join('\n\n');
+                
+                await sendNotification(spot.ntfyTopic, spot.name, consolidatedMessage);
+            } else {
+                console.log(`Scan complete for ${spot.name}: No matching conditions found in this 48h-96h cycle.`);
+            }
+
+            // Avoid rate limits between distinct spot queries
             await new Promise(resolve => setTimeout(resolve, 1000));
         }
     } catch (err) {
@@ -56,14 +71,18 @@ async function checkAllSpots() {
 }
 
 async function sendNotification(topic, beachName, message) {
-    await axios.post(`https://ntfy.sh/${topic}`, message, {
-        headers: {
-            'Title': `⛵ Landsail Spotting: ${beachName}`,
-            'Priority': 'high',
-            'Tags': 'wind_face,ocean'
-        }
-    });
-    console.log(`Notification sent out to topic: ${topic}`);
+    try {
+        await axios.post(`https://ntfy.sh/${topic}`, message, {
+            headers: {
+                'Title': `⛵ Daily Landsail Update: ${beachName}`,
+                'Priority': 'high',
+                'Tags': 'wind_face,ocean'
+            }
+        });
+        console.log(`Consolidated notification summary safely sent out to topic: ${topic}`);
+    } catch (postErr) {
+        console.error(`Failed pushing data out to ntfy server channel: ${postErr.message}`);
+    }
 }
 
 checkAllSpots();
