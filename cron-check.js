@@ -45,9 +45,17 @@ async function checkAllSpots() {
                             timeZone: 'Europe/Lisbon',
                             weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
                         });
+                        
+                       const lowTideHour = rawTime.toLocaleTimeString('pt-PT', { 
+                            timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit' 
+                        });
 
                         // Store a neat single-line summary string for this session window
-                        matchingWindows.push(`📅 ${displayTime}h\n💨 Wind: ${windAtT.toFixed(1)} km/h | 🌊 Coeff: ${coeff}`);
+                        matchingWindows.push(
+                            `📅 ${displayTime}h\n` + 
+                            `📉 Low Tide: ${lowTideHour}h\n` +
+                            `💨 Wind: ${windAtT.toFixed(1)} km/h ` +
+                            `| 🌊 Coeff: ${coeff}`);
                     }
                 }
             }
@@ -55,7 +63,7 @@ async function checkAllSpots() {
             // After scanning all windows for this beach, fire exactly ONE notification summary
             if (matchingWindows.length > 0) {
                 // Join separate sessions cleanly with clear space breaks
-                const consolidatedMessage = `The following upcoming riding sessions have matched your beach constraints:\n\n` + matchingWindows.join('\n\n');
+                const consolidatedMessage = `The following upcoming riding sessions have matched your beach riding criteria:\n\n` + matchingWindows.join('\n\n');
                 
                 await sendNotification(spot.ntfyTopic, spot.name, consolidatedMessage);
             } else {
@@ -76,7 +84,8 @@ async function sendNotification(topic, beachName, message) {
             headers: {
                 'Title': `⛵ Daily Landsail Update: ${beachName}`,
                 'Priority': 'high',
-                'Tags': 'wind_face,ocean'
+                'Tags': 'wind_face,ocean',
+                'Actions': 'view, Open Live Dashboard, https://palmajoao.github.io/LandSailSpotting/'
             }
         });
         console.log(`Consolidated notification summary safely sent out to topic: ${topic}`);
