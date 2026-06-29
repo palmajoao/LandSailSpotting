@@ -1,67 +1,64 @@
 # Landsail Automation System Manual
 
-An automated meteorological engine and interactive analytical tracking dashboard optimized specifically for beach landsailing setups utilizing a **5.2m² sail** and an **80kg driver payload capacity** on tidal flats.
+Welcome to the Landsail Pro Dashboard! This dashboard is calibrated for a standard beach landsailing configuration (5.2m² sail, 80kg rider payload on tidal flats). It helps you quickly identify safe, windy, and hard-packed sand windows.
 
 ---
 
-## 🔄 Engine Operations & Cron Pipeline
+## 🟢 Quick Start Guide (For Riders)
 
-The system architecture functions entirely serverless and runs automatically without requiring dedicated hosting hardware:
+### 1. How to Read the 7-Wedge "Cheese" Map Icons
+Each marker on the map is a **7-wedge cheese wheel** showing the forecast outlook for the next 7 days (numbered 1 to 7, starting from Today). The wedges are color-coded based on wind conditions:
 
-1. **GitHub Actions Worker Execution:** Every 3 hours (8 times a day), a scheduled background cron worker initializes automatically using the schedule config specified in `.github/workflows/daily-check.yml`.
-2. **Meteorological Grid Scanning:** The script (`cron-check.js`) reads coordinates directly from `spots.json`, calling the Open-Meteo Marine API and Weather Forecasting API simultaneously.
-3. **Condition Filtering & Direct Alerts:** The script filters data to isolate localized low-tide windows. If upcoming conditions match or exceed your performance thresholds, it sends an encrypted notification payload directly to your phone using the **ntfy.sh** delivery framework.
+* **🟥 RED (0 - 17 km/h): Insufficient Wind.** Too light to break static rolling resistance on sand. You will stall out and get stuck in soft sand.
+* **🟨 YELLOW (18 - 25 km/h): Safe & Cruising.** Ideal cruising zone. The sail builds enough power to stay on top of the hard sand crust cleanly without capsizing risks.
+* **🟩 GREEN (26 - 38 km/h): Peak Performance.** Sail fully pressurized. Apparent wind values multiply acceleration. High speeds across tidal flats.
+* **🟪 PURPLE (39+ km/h): Expert Only.** High risk of sudden capsizing. Massive lateral lift forces will cause the cart to two-wheel. Advanced reflexes required.
 
----
+### 2. How to Read the Low Tide Table
+Clicking any beach icon on the map displays a 7-day low tide outlook schedule. Since beach sailing requires hard sand, the table displays a **5-hour window** around each low tide apex (from 2 hours before to 2 hours after).
+* **Look for Green or Yellow wind speeds** alongside a **high tide coefficient (80%+)** for the largest, fastest, and safest dry sand runway.
 
-## 📊 Low Tide Analysis & Variable Coefficients
-
-Because landsailing on beaches requires maximum clearance from waves and soft dunes, a session window maps out across a strict **5-hour block** centered precisely at the low tide apex ($T-2\text{h}$ to $T+2\text{h}$).
-
-To guarantee geographical precision across unique Atlantic coastlines, the engine dynamically compiles a 31-day rolling historical tracking array for your exact coordinates to isolate absolute baseline spring/neap range extremes. It then scores current upcoming entries on a standard 0 to 120 scale:
-
-$$\text{Local Coeff} = \text{Math.round}\left(\frac{\text{HighTide}_{\text{Max Peak}} - \text{LowTide}_{\text{Current Min}}}{\text{Historical Max Delta}} \times 120\right)$$
-
-### 💡 What does the "% of Max Spring" mean?
-Next to the raw coefficient calculation, the dashboard displays a converted percentage scale:
-$$\text{Percentage} = \text{Math.round}\left(\frac{\text{Current Coeff}}{120} \times 100\right)$$
-
-This metric serves as a direct performance rating for how much beach surface area will be exposed:
-* **80% to 100% (Premium Spring Tide):** Maximum planetary alignment. The water pulls back to extreme physical low limits, leaving a massive, hard-packed, ultra-fast sand flat. Ideal performance window.
-* **50% to 79% (Mean/Average Tide):** Standard tidal drop. Good riding space, but soft dry sand traps and tidal channels will sit much closer to your tacking line.
-* **Below 50% (Neap Tide):** Weak water movement. The beach remains highly restricted, narrow, and saturated with water. Rolling resistance is high and turn space is dangerously narrow.
+### 3. Get Phone Notifications (ntfy.sh)
+You can receive instant push notifications on your phone 2 to 7 days before a great riding window occurs:
+1. Download the free **ntfy** app on your mobile phone ([iOS App Store](https://apps.apple.com/us/app/ntfy/id1625396347) / [Google Play Store](https://play.google.com/store/apps/details?id=io.heckel.ntfy)).
+2. Click the **🔔 icon** next to your favorite beaches in the sidebar list layout on this dashboard to subscribe to their broadcast channels inside the app.
 
 ---
 
-## 🏖️ Beach Sailing Calibrated Performance Bands
+## 🤓 Geek & Developer Details
 
-Because damp sand profiles increase physical rolling resistance significantly compared to frictionless paved airfields, these custom thresholds have been intentionally shifted upwards to ensure safety, tracking traction, and apparent wind momentum:
+<details>
+<summary><b>🛠️ Engine Operations & Cron Pipeline</b> (Click to expand)</summary>
 
-| Status Colour | Wind Speed (km/h) | Riding Experience & Mechanical Characteristics |
-| :--- | :--- | :--- |
-| **🟥 RED** | 0 - 17 km/h | **Insufficient Wind.** Unable to break static rolling resistance on sand. Frequent stops in soft dry traps. Tacking turns will stall out. |
-| **🟨 YELLOW** | 18 - 25 km/h | **Light Fun & Safe.** Ideal cruising zone. Sail builds enough power to stay on top of the hard sand crust cleanly without capsizing risks. Forgiving entry window. |
-| **🟩 GREEN** | 26 - 38 km/h | **Peak Performance.** Sail fully pressurized. Apparent wind values multiply acceleration instantly. High speeds across tidal flats. Glides over small tide pools. |
-| **🟪 PURPLE** | 39+ km/h | **Expert Only.** High risk of sudden overpowering. Massive lateral lift forces will cause the cart to two-wheel. Requires fast sheet line dumping and advanced reflexes. |
+The system runs entirely serverless and updates automatically once a day:
+1. **GitHub Actions Workflow:** Runs once a day automatically (every morning at 7:00 AM UTC / 8:00 AM West European Summer Time) using the configuration specified in `.github/workflows/daily-check.yml`.
+2. **Grid Scanning:** The backend script (`cron-check.js`) reads coordinates from the [spots.json](./spots.json) file and fetches the Open-Meteo Marine API and Weather Forecasting API.
+3. **Condition Filtering & Alerts:** If upcoming conditions match or exceed target thresholds (wind speed > 18 km/h and tide coefficient > 80%) between 2 to 7 days ahead, it sends a payload directly to the respective `ntfy.sh` topic.
 
----
+</details>
 
-## 🧀 Understanding 4-Wedge "Cheese" Map Icons
+<details>
+<summary><b>🌊 Low Tide Analysis & Mathematical Coefficients</b> (Click to expand)</summary>
 
-The map markers feature custom dynamic circular "cheese wheels" split into four distinct numbered quadrants. 
+To guarantee geographical precision across unique Atlantic coastlines, the engine compiles a 31-day rolling historical tracking array for each spot to isolate baseline spring/neap range extremes. It then scores current upcoming entries on a standard 0 to 120 scale using this calculation:
 
-* **Wedge 1 (Top-Right):** Today's Forecast Outlook status.
-* **Wedge 2 (Bottom-Right):** Tomorrow's Forecast Window status.
-* **Wedge 3 (Bottom-Left):** Day 2 Forecast Window status.
-* **Wedge 4 (Top-Left):** Day 3 Forecast Window status.
+* **Tide Coefficient** = `((High Tide Height - Low Tide Height) / Maximum Historical Difference) × 120`
 
-The inner background paths dynamically color-code to match the precise threshold band predicted for that day's specific low-tide window, giving you a comprehensive 4-day structural overview instantly.
+The dashboard displays a converted percentage scale next to the coefficient:
 
----
+* **Percentage of Max Spring** = `(Tide Coefficient / 120) × 100`
 
-## 📍 Adding a New Beach Location
+This serves as a direct rating of exposed beach width:
+* **80% to 100% (Premium Spring Tide):** Water pulls back to extreme limits, leaving a massive, hard-packed sand flat.
+* **50% to 79% (Mean/Average Tide):** Standard drop. Good riding space, but soft dry sand traps sit closer to your run.
+* **Below 50% (Neap Tide):** Weak water movement. The beach remains highly restricted, narrow, and saturated with wet sand.
 
-To inject a new sand runway into your tracking matrix, you do not need to modify any core javascript routines. Simply edit the `spots.json` configuration file inside your GitHub code repository and append a new structured object node into the array template:
+</details>
+
+<details>
+<summary><b>📍 Adding a New Beach Location</b> (Click to expand)</summary>
+
+To track a new beach, simply edit the [spots.json](./spots.json) file inside the repository and append a new structured object node:
 
 ```json
 {
@@ -71,3 +68,6 @@ To inject a new sand runway into your tracking matrix, you do not need to modify
   "tideforescast": "Peniche",
   "ntfyTopic": "landsail_peniche_2026"
 }
+```
+
+</details>

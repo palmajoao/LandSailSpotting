@@ -29,8 +29,8 @@ async function checkAllSpots() {
             // Container to collect all ideal windows for this specific spot
             let matchingWindows = [];
 
-            // Filter strictly for 2 to 4 days ahead (48 hours to 96 hours out)
-            for (let i = historyIdx + 48; i < historyIdx + 96; i++) {
+            // Filter strictly for 2 to 7 days ahead (48 hours to 168 hours out)
+            for (let i = historyIdx + 48; i < historyIdx + 168; i++) {
                 if (i >= tHourly.sea_level_height_msl.length - 3) break;
                 
                 const range = tHourly.sea_level_height_msl.slice(i - 6, i + 7);

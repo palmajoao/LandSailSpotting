@@ -99,11 +99,11 @@ function renderSpot(spot, windows) {
         map.flyTo([spot.lat, spot.lon], 12);
     });
 
-    // --- 2. GENERATE 4-WAY CHEESE PIE COLORS ---
+    // --- 2. GENERATE 7-WAY CHEESE PIE COLORS ---
     const today = new Date();
-    const dayConfigs = [getBeachColorConfig(0), getBeachColorConfig(0), getBeachColorConfig(0), getBeachColorConfig(0)];
+    const dayConfigs = Array.from({ length: 7 }, () => getBeachColorConfig(0));
 
-    [0, 1, 2, 3].forEach(idx => {
+    [0, 1, 2, 3, 4, 5, 6].forEach(idx => {
         const target = new Date(); 
         target.setDate(today.getDate() + idx);
         const d = windows.find(w => w.time.toDateString() === target.toDateString());
@@ -112,24 +112,41 @@ function renderSpot(spot, windows) {
         }
     });
 
+    // Generate dynamic SVG paths and text labels for 7 days
+    let svgSlicesHtml = '';
+    const numSlices = 7;
+    const cx = 23;
+    const cy = 23;
+    const r = 21;
+    for (let i = 0; i < numSlices; i++) {
+        const angle1 = -90 + (i * 360 / numSlices);
+        const angle2 = -90 + ((i + 1) * 360 / numSlices);
+        const rad1 = angle1 * Math.PI / 180;
+        const rad2 = angle2 * Math.PI / 180;
+        const x1 = cx + r * Math.cos(rad1);
+        const y1 = cy + r * Math.sin(rad1);
+        const x2 = cx + r * Math.cos(rad2);
+        const y2 = cy + r * Math.sin(rad2);
+        
+        const pathD = `M ${cx},${cy} L ${x1.toFixed(2)},${y1.toFixed(2)} A ${r},${r} 0 0,1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`;
+        
+        // Place label at 62% radius
+        const midAngle = angle1 + (180 / numSlices);
+        const midRad = midAngle * Math.PI / 180;
+        const tx = cx + 13 * Math.cos(midRad);
+        const ty = cy + 13 * Math.sin(midRad);
+        
+        svgSlicesHtml += `
+            <path d="${pathD}" fill="${dayConfigs[i].color}" stroke="#222" stroke-width="0.5" />
+            <text x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" font-size="7.5" font-weight="bold" fill="${dayConfigs[i].text}" text-anchor="middle" dominant-baseline="central">${i + 1}</text>
+        `;
+    }
+
     const cheeseIcon = L.divIcon({
         className: 'custom-cheese-icon',
         html: `
             <svg width="46" height="46" viewBox="0 0 46 46" style="background: white; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 1px solid #666;">
-                <path d="M 23,23 L 23,2 A 21,21 0 0,1 44,23 Z" fill="${dayConfigs[0].color}" />
-                <text x="31" y="16" font-size="10" font-weight="bold" fill="${dayConfigs[0].text}">1</text>
-                
-                <path d="M 23,23 L 44,23 A 21,21 0 0,1 23,44 Z" fill="${dayConfigs[1].color}" />
-                <text x="31" y="34" font-size="10" font-weight="bold" fill="${dayConfigs[1].text}">2</text>
-                
-                <path d="M 23,23 L 23,44 A 21,21 0 0,1 2,23 Z" fill="${dayConfigs[2].color}" />
-                <text x="13" y="34" font-size="10" font-weight="bold" fill="${dayConfigs[2].text}">3</text>
-                
-                <path d="M 23,23 L 2,23 A 21,21 0 0,1 23,2 Z" fill="${dayConfigs[3].color}" />
-                <text x="13" y="16" font-size="10" font-weight="bold" fill="${dayConfigs[3].text}">4</text>
-                
-                <line x1="23" y1="2" x2="23" y2="44" stroke="#444" stroke-width="1" />
-                <line x1="2" y1="23" x2="44" y2="23" stroke="#444" stroke-width="1" />
+                ${svgSlicesHtml}
             </svg>
         `,
         iconSize: [46, 46],
@@ -149,7 +166,7 @@ function renderSpot(spot, windows) {
         }
     };
 
-    let rows = windows.slice(0, 7).map(w => {
+    let rows = windows.slice(0, 14).map(w => {
         const isNight = w.time.getHours() < 7 || w.time.getHours() >= 20;
         
         // Get the color config for this specific low tide's wind speed
@@ -174,7 +191,7 @@ function renderSpot(spot, windows) {
 
     m.bindPopup(`
         <div style="min-width:350px">
-            <h6 class="fw-bold border-bottom pb-1 mb-2">${spot.name} <span class="float-end small text-muted">4-Day Outlook</span></h6>
+            <h6 class="fw-bold border-bottom pb-1 mb-2">${spot.name} <span class="float-end small text-muted">7-Day Outlook</span></h6>
             <table class="table table-sm table-bordered mb-2" style="font-size:0.65rem">
                 <thead class="table-light">
                     <tr>
